@@ -1,20 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define MAX 100
+#define MAX_PACIENTE 50
+#define MAX_MEDICO 20
+#define MAX_CONSULTA 100 // Eu só troquei os limites para ficar igual o do trabalho, mas deixar todos como 100 dá também
 
 typedef struct MEDICO{
-    char registro_m[MAX];
-    char nome_medico[MAX];
-    char especialidade[MAX];
+    char registro_m[MAX_MEDICO];
+    char nome_medico[MAX_MEDICO];
+    char especialidade[MAX_MEDICO];
 }medico;
 
 typedef struct PACIENTE{
-    char registro_p[MAX];
-    char nome_paciente[MAX];
-    char identidade[MAX];
-    char endereco[MAX];
-    char telefone[MAX];
-    char sexo[MAX];
+    char registro_p[MAX_PACIENTE];
+    char nome_paciente[MAX_PACIENTE];
+    char identidade[MAX_PACIENTE];
+    char endereco[MAX_PACIENTE];
+    int telefone;
+    char sexo[MAX_PACIENTE];
 }paciente;
 typedef struct DATA{
     int dia;
@@ -24,8 +26,8 @@ typedef struct DATA{
 
 typedef struct CONSULTA{
     int numero;
-    medico;
-    paciente;
+    medico m; //Aqui a gente precisa colocar o nome da variavel para poder acessar depois, tipo c1.m.nome_medico 
+    paciente p;
     int horario;
     int duracao;
     int data;
