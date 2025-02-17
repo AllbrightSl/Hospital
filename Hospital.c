@@ -1,35 +1,52 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define MAX 100
+#include <string.h>
+#include <ctype.h>
 
-typedef struct MEDICO{
+#define MAX 100
+#define MAX_CONSULTA 100
+#define MAX_PACIENTE 50
+#define MAX_MEDICO 20
+typedef struct medico{
     char registro_m[MAX];
     char nome_medico[MAX];
     char especialidade[MAX];
-}medico;
+}MEDICO;
 
-typedef struct PACIENTE{
+typedef struct paciente{
     char registro_p[MAX];
     char nome_paciente[MAX];
     char identidade[MAX];
     char endereco[MAX];
     char telefone[MAX];
     char sexo[MAX];
-}paciente;
-typedef struct DATA{
+}PACIENTE;
+typedef struct data{
     int dia;
     int mes;
     int ano;
-}data;
-
-typedef struct CONSULTA{
+}DATA;
+typedef struct consulta{
     int numero;
-    medico;
-    paciente;
+    MEDICO;
+    PACIENTE;
     int horario;
     int duracao;
-    int data;
-}consulta;
+    DATA;
+}CONSULTA;
+
+    PACIENTE P[MAX_PACIENTE];
+    MEDICO M[MAX_MEDICO];
+    CONSULTA C[MAX_CONSULTA];
+
+int buscar_consulta(char string[]){
+    for (int i = 0; i < 100; i++){
+        if(strcmp(string, C[i].) == 0){
+            return 1;
+        }
+    }
+    return 0;
+}
 
 int main(){
     while(1){
@@ -47,8 +64,17 @@ int main(){
 
     switch (n){
         case 1:
-        printf("Escreva o horario para sua consulta:\n");
-        fgets;
+        char hora[6];
+        printf("Escreva o horario para sua consulta (formato HH:MM):\n");
+        scanf(" %6[^\n]", &hora);
+        if (buscar_consulta(hora)){
+            printf("Horario da consulta ja marcado!\n");
+            pritf("Favor marcar outro horario\n");
+        }
+        else{
+            
+        }
+
 
         break;
 
@@ -66,8 +92,22 @@ int main(){
         printf("3 - Ver a lista de pacientes para cada especialidade\n");
         scanf("%d", &escolha);
         
-        break;
+            switch (escolha){
+                case 1:
+                
+            
+                break;
+
+                case 2:
+                break;
+
+                case 3:
+                break;
         
+                default:
+                    printf("Escolha um numero valido\n");
+                    break;
+            } 
         case 5:
         printf("Saindo...\n");
         return 0;
