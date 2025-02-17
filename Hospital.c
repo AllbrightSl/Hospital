@@ -8,7 +8,7 @@
 #define MAX_PACIENTE 50
 #define MAX_MEDICO 20
 typedef struct medico{
-    char registro_m[MAX]; //Aqui estou deixando com 100 porque √© o tamanho m√°ximo que as strings ter√£o
+    char registro_m[MAX];
     char nome_medico[MAX];
     char especialidade[MAX];
 }MEDICO;
@@ -32,29 +32,63 @@ typedef struct consulta{
     PACIENTE paciente;
     char horario[6];
     int duracao;
-    DATA;
+    DATA data;
 }CONSULTA;
 
     PACIENTE P[MAX_PACIENTE];
     MEDICO M[MAX_MEDICO];
     CONSULTA C[MAX_CONSULTA];
+    int total_consultas=0;
 
     void consulta(){
-    /*Antes de j√° criar a consulta e colocar diretamente no nosso sistema, 
-    quero ver se o hor√°rio da consulta com o medico j√° est√° sendo usado
-    */    
+    int num_verif, dia, mes, ano, duracao;
+    char nome_m[MAX], nome_p[MAX], horario[6];
+
+    /* *Problema* - Ser· que a gente tem que verificar se a duracao de 
+    uma colsulta conflita com o horario de outro paciente?
+
+    Tipo, com o mesmo mÈdico,
+    paciente1 ‡s 14:00 com 60 minutos
+    paciente2 ‡s 13:30 com 60 minutos.
+    Eles conflitam um com o outro na duracao mas o hor·rio È diferente.
+
+    Se for o caso talvez seria melhor pegar o horario como int, pra poder
+    fazer operaÁıes com ele e verificar isso
+    */
+
     printf("Escreva o numero de identificacao da consulta:\n");
-        scanf("");
-        printf("Escreva o nome do medico desejado:\n");
-        scanf("");
-        printf("Escreva o nome completo do paciente:\n");
-        scanf("");
-        printf("Escreva o horario desejado (no formato HH:MM):\n");
-        scanf("");
-        printf("Escreva a duracao necessaria para sua consulta:\n");
-        scanf("");
-        printf("Escreva a data: DD/MM/AA\n");
-        scanf(" %d/%d/%d", );
+        scanf("%d", &num_verif);
+
+    getchar();
+
+    printf("Escreva o nome do medico desejado:\n");
+        fgets(nome_m, sizeof(nome_m), stdin); // Usando fgets para caso o nome seja composto
+        nome_m[strcspn(nome_m, "\n")] = '\0';
+    printf("Escreva o nome completo do paciente:\n");
+        fgets(nome_p, sizeof(nome_p), stdin);
+        nome_p[strcspn(nome_p, "\n")] = '\0';
+    printf("Escreva o horario desejado (no formato HH:MM):\n");
+        scanf("%s", horario);
+    printf("Escreva a duracao necessaria para sua consulta em minutos:\n");
+        scanf("%d", &duracao);
+    printf("Escreva a data: DD/MM/AA\n");
+        scanf(" %d/%d/%d", &dia, &mes, &ano);
+
+    //Loop para verificar se o horario do medico ja esta sendo usado
+
+    for(int i=0; i<=total_consultas; i++){
+        if(strcmp(C[i].medico.nome_medico, nome_m) == 0 && 
+        strcmp(C[i].horario, horario)== 0 &&
+        (C[i].data.dia == dia) && (C[i].data.mes == mes) && (C[i].data.ano) == ano) 
+        printf("\n\nO medico ja esta reservado nesse horario.\n");
+        return;
+        // Falta verificar se a duracao da consulta antes desse horario conflita 
+    }
+
+    //Se n„o tiver reservado, criar o codigo para colocar a reserva
+
+    printf("\nConsulta criada para o dia %d do mes %d, ano %d, as %s com duracao de %d minutos\n\n", dia, mes, ano, horario, duracao);
+   
     }
 
 int main(){
@@ -83,10 +117,10 @@ int main(){
         break;
         
         case 4:
-        int escolha;
+        int escolha;// Aqui no vscode esse int t· dando erro, pra vocÍ tambÈm?
         printf("Voce deseja:\n");
         printf("1 - Ver a lista de consultas agendadas para um paciente\n");
-        prinf("2 - Ver a lista de consultas agendadas para um medico\n");
+        printf("2 - Ver a lista de consultas agendadas para um medico\n");
         printf("3 - Ver a lista de pacientes para cada especialidade\n");
         scanf("%d", &escolha);
         
