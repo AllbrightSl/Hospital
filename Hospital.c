@@ -1,677 +1,685 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#define MAX_MEDICOS 20
+#define MAX_PACIENTES 50
+#define MAX_CONSULTAS 100
 
-#define MAX 100
-#define MAX_CONSULTA 100
-#define MAX_PACIENTE 50
-#define MAX_MEDICO 20
+typedef struct {
+    int id;
+    char nome[50];
+    char especialidade[50];
+} Medico;
 
-typedef struct medico{
-    int registro_m; //Esse registro aqui nao seriam numeros?
-    char nome_medico[MAX];
-    char especialidade[MAX];
-}MEDICO;
+typedef struct {
+    int id;
+    char nome[50];
+    char identidade[20];
+    char endereco[100];
+    char telefone[20];
+    char sexo;
+} Paciente;
 
-typedef struct paciente{
-    int registro_p;
-    char nome_paciente[MAX];
-    char identidade[MAX];
-    char endereco[MAX];
-    char telefone[MAX];
-    char sexo[MAX];
-}PACIENTE;
-typedef struct data{
-    int dia;
-    int mes;
-    int ano;
-}DATA;
-typedef struct consulta{
+typedef struct {
     int numero;
-    MEDICO medico;
-    PACIENTE paciente;
-    char horario[6];
+    int idMedico;
+    int idPaciente;
+    char horario[10];
     int duracao;
-    DATA data;
-}CONSULTA;
+    char data[11];
+} Consulta;
 
-PACIENTE P[MAX_PACIENTE];
-MEDICO M[MAX_MEDICO];
-CONSULTA C[MAX_CONSULTA];
-int total_consultas=0;
-int total_medicos=0;
-int total_pacientes=0;
+void limparInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 
-void consulta(){
-    int num_verif, dia, mes, ano, duracao, verificador_m=0, verificador_p=0;
-    char nome_m[MAX], nome_p[MAX], horario[6];
-
-    /* *Problema* - Sera que a gente tem que verificar se a duracao de 
-    uma consulta conflita com o horario de outro paciente?
-
-    Tipo, com o mesmo medico,
-    paciente1 as 14:00 com 60 minutos
-    paciente2 as 13:30 com 60 minutos.
-    Eles conflitam um com o outro na duracao mas o horario e diferente.
-
-    Se for o caso talvez seria melhor pegar o horario como int, pra poder
-    fazer operacoes com ele e verificar isso
-    */
-
-    // mudei a posicao para facilitar o uso de caso de testes e deixar o codigo mais logico
-    printf("Escreva a data que deseja marcar a consulta: DD/MM/AA\n");
-        scanf(" %d/%d/%d", &dia, &mes, &ano);
-    printf("Escreva o horario desejado (no formato HH:MM):\n");
-        scanf("%s", horario);
-    printf("Escreva a duracao necessaria para sua consulta em minutos:\n");
-        scanf("%d", &duracao);
-        getchar();
-    printf("Escreva o nome do medico desejado:\n");
-        fgets(nome_m, sizeof(nome_m), stdin); // Usando fgets para caso o nome seja composto
-        nome_m[strcspn(nome_m, "\n")] = '\0';
-
-    printf("Escreva o nome completo do paciente:\n");
-        fgets(nome_p, sizeof(nome_p), stdin);
-        nome_p[strcspn(nome_p, "\n")] = '\0';
-
-    //Loop para verificar se o horario do medico ja esta sendo usado
-    for(int i=0; i< total_medicos; i++){
-        if(strcmp(M[i].nome_medico, nome_m) == 0 ){
-            verificador_m= 1;
-        }
+void lerString(const char *prompt, char *buffer, int size) {
+    printf("%s", prompt);
+    if(fgets(buffer, size, stdin) != NULL) {
+        size_t len = strlen(buffer);
+        if(len > 0 && buffer[len-1] == '\n')
+            buffer[len-1] = '\0';
     }
-    for(int i=0; i < total_pacientes; i++){
-        if(strcmp(P[i].nome_paciente, nome_p) == 0 ) {
-            verificador_p = 1;
-        }
+}
+
+int buscarPacientePorId(Paciente pacientes[], int numPacientes, int id) {
+    for (int i = 0; i < numPacientes; i++) {
+        if (pacientes[i].id == id)
+            return i;
     }
-    if(verificador_m == 0 || verificador_p ==0) {
-        printf("\n\nNao foi possivel achar algum dos nomes mencionados, tente novamente\n");
+    return -1;
+}
+
+int buscarMedicoPorId(Medico medicos[], int numMedicos, int id) {
+    for (int i = 0; i < numMedicos; i++) {
+        if (medicos[i].id == id)
+            return i;
+    }
+    return -1;
+}
+
+int buscarConsultaPorNumero(Consulta consultas[], int numConsultas, int numero) {
+    for (int i = 0; i < numConsultas; i++) {
+        if (consultas[i].numero == numero)
+            return i;
+    }
+    return -1;
+}
+
+void incluirConsulta(Consulta consultas[], int *numConsultas, Paciente pacientes[], int numPacientes, Medico medicos[], int numMedicos) {
+    if (*numConsultas >= MAX_CONSULTAS) {
+        printf("Limite de consultas atingido.\n");
         return;
     }
-    for(int i=0; i< total_medicos; i++){
-        if((strcmp(C[i].medico.nome_medico, nome_m) == 0 ) && strcmp(C[i].horario, horario)== 0 && (C[i].data.dia == dia) && (C[i].data.mes == mes) && (C[i].data.ano == ano)) {
-                printf("\n\nO medico ja esta reservado nesse horario.\n");
-                return;
-        }
-    }
+    Consulta c;
+    printf("\n--- Inclusao de Consulta ---\n");
+    printf("Digite o numero da consulta: ");
+    scanf("%d", &c.numero);
+    limparInputBuffer();
 
-    printf("Escreva o numero de identificacao da consulta:\n");
-        scanf("%d", &num_verif);
-
-    // Adicionando a consulta
-    for(int i=0; i< total_medicos; i++){
-        if(strcmp(M[i].nome_medico, nome_m) == 0) C[total_consultas].medico = M[i];
-    }
-    for(int i=0; i< total_pacientes; i++){
-        if(strcmp(P[i].nome_paciente, nome_p) == 0) C[total_consultas].paciente = P[i];
-    }
-    C[total_consultas].numero = num_verif;
-    C[total_consultas].data.dia = dia;
-    C[total_consultas].data.mes = mes;
-    C[total_consultas].data.ano = ano;
-    C[total_consultas].duracao = duracao;
-    strcpy(C[total_consultas].horario, horario);
-    total_consultas++; 
-
-    printf("\nConsulta criada para o dia %d do mes %d, ano %d, as %s com duracao de %d minutos\n\n", dia, mes, ano, horario, duracao);
-
-}
-
-
-void alterarconsulta(){
-    int i, num, escolha;
-    char nome[MAX];
-
-    printf("\n\nDigite o numero da consulta: ");
-    scanf("%d", &num);
-
-
-    printf("O que voce deseja alterar?\n1- Numero\n2- Medico\n3- Paciente\n4- Horario\n5- Duracao\n6- Data\n");
-    printf("escolha: ");
-    scanf("%d",&escolha);
-
-    for (i = 0; i <= total_consultas; i++) {
-        if (C[i].numero == num) {
-            switch(escolha){
-                case 1:
-                printf("\n\nDigite o novo numero da consulta: ");
-                scanf("%d",&C[i].numero);
-                getchar();
-                printf("Numero da consulta alterado com sucesso!\n");
-                return;
-                
-                case 2:
-                printf("\n\nDigite o nome do medico para qual voce deseja trocar: ");
-                fgets(nome, MAX, stdin);
-                nome[strcspn(nome, "\n")] = '\0';
-                
-
-                for(int j=0;j<total_medicos;j++){
-                    printf("nome:%s\n", nome);
-                    printf("data:%s\n",M[j].nome_medico);
-                    if(strcmp(nome, M[j].nome_medico)==0){
-                        strcpy(C[i].medico.nome_medico, nome);
-                        strcpy(C[i].medico.especialidade, M[j].especialidade);
-                        C[i].medico.registro_m = M[j].registro_m; 
-                        printf("Medico alterado com sucesso!\n");
-                        return;      
-                    }
-                }
-                printf("\nMedico nao encontrado!\n");
-                return;
-
-                case 3:  // Alterar paciente
-                printf("\nDigite o nome do novo paciente: ");
-                fgets(nome, MAX, stdin);
-                nome[strcspn(nome, "\n")] = '\0';
-
-                for (int j = 0; j < total_pacientes; j++) {
-                    if (strcmp(nome, P[j].nome_paciente) == 0) {
-                        strcpy(C[i].paciente.nome_paciente, P[j].nome_paciente);
-                        strcpy(C[i].paciente.telefone, P[j].telefone);
-                        strcpy(C[i].paciente.endereco, P[j].endereco);
-                        strcpy(C[i].paciente.sexo, P[j].sexo);
-                        strcpy(C[i].paciente.identidade, P[j].identidade);
-                        C[i].paciente.registro_p = P[j].registro_p;
-                        printf("Paciente alterado com sucesso!\n");
-                        return;
-                    }
-                }
-                printf("\nPaciente nao encontrado!\n");
-                return;
-
-                case 4:  // Alterar horário
-                printf("\nDigite o novo horario (HH:MM): ");
-                scanf("%s", C[i].horario);
-                printf("Horario alterado com sucesso!\n");
-                return;
-
-                case 5:  // Alterar duração
-                printf("\nDigite a nova duracao (minutos): ");
-                scanf("%d", &C[i].duracao);
-                printf("Duracao alterada com sucesso!\n");
-                return;
-
-                case 6:  // Alterar data
-                printf("\nDigite a nova data (DD/MM/AA): ");
-                scanf("%d/%d/%d", &C[i].data.dia, &C[i].data.mes, &C[i].data.ano);
-                printf("Data alterada com sucesso!\n");
-                return;
-
-                default:
-                printf("Opcao invalida!\n");
-                return;
-
-            }
-        }
-        printf("\nNumero da consulta nao encontrado!\n");
+    if (buscarConsultaPorNumero(consultas, *numConsultas, c.numero) != -1) {
+        printf("Consulta com este numero ja existe.\n");
         return;
     }
+    printf("Digite o identificador do medico: ");
+    scanf("%d", &c.idMedico);
+    limparInputBuffer();
+    if (buscarMedicoPorId(medicos, numMedicos, c.idMedico) == -1) {
+        printf("Medico nao encontrado.\n");
+        return;
+    }
+    printf("Digite o identificador do paciente: ");
+    scanf("%d", &c.idPaciente);
+    limparInputBuffer();
+    if (buscarPacientePorId(pacientes, numPacientes, c.idPaciente) == -1) {
+        printf("Paciente nao encontrado.\n");
+        return;
+    }
+    lerString("Digite o horario (HH:MM): ", c.horario, 10);
+    printf("Digite a duracao da consulta (em minutos): ");
+    scanf("%d", &c.duracao);
+    limparInputBuffer();
+    lerString("Digite a data (DD/MM/AAAA): ", c.data, 11);
+
+    consultas[*numConsultas] = c;
+    (*numConsultas)++;
+    printf("Consulta incluida com sucesso.\n");
 }
 
-void excluirconsulta() {
-    int i, num, encontrada = 0;
+void alterarConsulta(Consulta consultas[], int numConsultas, Paciente pacientes[], int numPacientes, Medico medicos[], int numMedicos) {
+    int numero;
+    printf("\n--- Alteracao de Consulta ---\n");
+    printf("Digite o numero da consulta a ser alterada: ");
+    scanf("%d", &numero);
+    limparInputBuffer();
+    int pos = buscarConsultaPorNumero(consultas, numConsultas, numero);
+    if (pos == -1) {
+        printf("Consulta nao encontrada.\n");
+        return;
+    }
+    Consulta *c = &consultas[pos];
+    printf("Consulta atual:\n");
+    printf("Numero: %d\n", c->numero);
+    printf("Medico: %d\n", c->idMedico);
+    printf("Paciente: %d\n", c->idPaciente);
+    printf("Horario: %s\n", c->horario);
+    printf("Duracao: %d\n", c->duracao);
+    printf("Data: %s\n", c->data);
 
-    printf("\nDigite o numero da consulta que deseja excluir: ");
-    scanf("%d", &num);
+    printf("\nDigite o novo identificador do medico: ");
+    scanf("%d", &c->idMedico);
+    limparInputBuffer();
+    if (buscarMedicoPorId(medicos, numMedicos, c->idMedico) == -1) {
+        printf("Medico nao encontrado. Alteracao cancelada.\n");
+        return;
+    }
+    printf("Digite o novo identificador do paciente: ");
+    scanf("%d", &c->idPaciente);
+    limparInputBuffer();
+    if (buscarPacientePorId(pacientes, numPacientes, c->idPaciente) == -1) {
+        printf("Paciente nao encontrado. Alteracao cancelada.\n");
+        return;
+    }
+    lerString("Digite o novo horario (HH:MM): ", c->horario, 10);
+    printf("Digite a nova duracao (em minutos): ");
+    scanf("%d", &c->duracao);
+    limparInputBuffer();
+    lerString("Digite a nova data (DD/MM/AAAA): ", c->data, 11);
 
-    for (i = 0; i <= total_consultas; i++) {
-        if (C[i].numero == num) {
-            encontrada = 1;
-            printf("\nConsulta %d excluida com sucesso!\n", num);
+    printf("Consulta alterada com sucesso.\n");
+}
 
-            C[i] = C[total_consultas - 1];
+void excluirConsulta(Consulta consultas[], int *numConsultas) {
+    int numero;
+    printf("\n--- Exclusao de Consulta ---\n");
+    printf("Digite o numero da consulta a ser excluida: ");
+    scanf("%d", &numero);
+    limparInputBuffer();
+    int pos = buscarConsultaPorNumero(consultas, *numConsultas, numero);
+    if (pos == -1) {
+        printf("Consulta nao encontrada.\n");
+        return;
+    }
+    Consulta c = consultas[pos];
+    printf("\nConsulta excluida:\n");
+    printf("Numero: %d\n", c.numero);
+    printf("Medico: %d\n", c.idMedico);
+    printf("Paciente: %d\n", c.idPaciente);
+    printf("Horario: %s\n", c.horario);
+    printf("Duracao: %d\n", c.duracao);
+    printf("Data: %s\n", c.data);
 
-            total_consultas--;
-            return;
+    for (int i = pos; i < (*numConsultas) - 1; i++) {
+        consultas[i] = consultas[i + 1];
+    }
+    (*numConsultas)--;
+    printf("Consulta removida com sucesso.\n");
+}
+
+void pesquisarConsulta(Consulta consultas[], int numConsultas, Paciente pacientes[], int numPacientes, Medico medicos[], int numMedicos) {
+    int numero;
+    printf("\n--- Pesquisa de Consulta ---\n");
+    printf("Digite o numero da consulta: ");
+    scanf("%d", &numero);
+    limparInputBuffer();
+    int pos = buscarConsultaPorNumero(consultas, numConsultas, numero);
+    if (pos == -1) {
+        printf("Consulta nao encontrada.\n");
+        return;
+    }
+    Consulta c = consultas[pos];
+    printf("\nConsulta encontrada:\n");
+    printf("Numero: %d\n", c.numero);
+    printf("Medico: %d", c.idMedico);
+    int posMedico = buscarMedicoPorId(medicos, numMedicos, c.idMedico);
+    if (posMedico != -1)
+        printf(" - Nome: %s\n", medicos[posMedico].nome);
+    else
+        printf("\n");
+    printf("Paciente: %d", c.idPaciente);
+    int posPaciente = buscarPacientePorId(pacientes, numPacientes, c.idPaciente);
+    if (posPaciente != -1)
+        printf(" - Nome: %s\n", pacientes[posPaciente].nome);
+    else
+        printf("\n");
+    printf("Horario: %s\n", c.horario);
+    printf("Duracao: %d\n", c.duracao);
+    printf("Data: %s\n", c.data);
+}
+
+void listarConsultas(Consulta consultas[], int numConsultas) {
+    if (numConsultas == 0) {
+        printf("Nenhuma consulta cadastrada.\n");
+    } else {
+        printf("\nLista de Consultas:\n");
+        for (int i = 0; i < numConsultas; i++) {
+            printf("Numero: %d, Medico: %d, Paciente: %d, Horario: %s, Duracao: %d, Data: %s\n",
+                   consultas[i].numero, consultas[i].idMedico, consultas[i].idPaciente,
+                   consultas[i].horario, consultas[i].duracao, consultas[i].data);
         }
     }
+}
 
-    if (!encontrada) {
-        printf("\nConsulta nao encontrada!\n");
+void incluirPaciente(Paciente pacientes[], int *numPacientes) {
+    if (*numPacientes >= MAX_PACIENTES) {
+        printf("Limite de pacientes atingido.\n");
+        return;
+    }
+    Paciente p;
+    printf("\n--- Inclusao de Paciente ---\n");
+    printf("Digite o identificador do paciente: ");
+    scanf("%d", &p.id);
+    limparInputBuffer();
+    if (buscarPacientePorId(pacientes, *numPacientes, p.id) != -1) {
+        printf("Paciente com este identificador ja existe.\n");
+        return;
+    }
+    lerString("Digite o nome do paciente: ", p.nome, 50);
+    lerString("Digite a identidade: ", p.identidade, 20);
+    lerString("Digite o endereco: ", p.endereco, 100);
+    lerString("Digite o telefone: ", p.telefone, 20);
+    printf("Digite o sexo (M/F): ");
+    scanf(" %c", &p.sexo);
+    limparInputBuffer();
+    pacientes[*numPacientes] = p;
+    (*numPacientes)++;
+    printf("Paciente incluido com sucesso.\n");
+}
+
+void alterarPaciente(Paciente pacientes[], int numPacientes) {
+    int id;
+    printf("\n--- Alteracao de Paciente ---\n");
+    printf("Digite o identificador do paciente a ser alterado: ");
+    scanf("%d", &id);
+    limparInputBuffer();
+    int pos = buscarPacientePorId(pacientes, numPacientes, id);
+    if (pos == -1) {
+        printf("Paciente nao encontrado.\n");
+        return;
+    }
+    Paciente *p = &pacientes[pos];
+    printf("\nDados atuais do paciente:\n");
+    printf("ID: %d\n", p->id);
+    printf("Nome: %s\n", p->nome);
+    printf("Identidade: %s\n", p->identidade);
+    printf("Endereco: %s\n", p->endereco);
+    printf("Telefone: %s\n", p->telefone);
+    printf("Sexo: %c\n", p->sexo);
+
+    lerString("Digite o novo nome: ", p->nome, 50);
+    lerString("Digite a nova identidade: ", p->identidade, 20);
+    lerString("Digite o novo endereco: ", p->endereco, 100);
+    lerString("Digite o novo telefone: ", p->telefone, 20);
+    printf("Digite o novo sexo (M/F): ");
+    scanf(" %c", &p->sexo);
+    limparInputBuffer();
+    printf("Paciente alterado com sucesso.\n");
+}
+
+void excluirPaciente(Paciente pacientes[], int *numPacientes, Consulta consultas[], int *numConsultas) {
+    int id;
+    printf("\n--- Exclusao de Paciente ---\n");
+    printf("Digite o identificador do paciente a ser excluido: ");
+    scanf("%d", &id);
+    limparInputBuffer();
+    int pos = buscarPacientePorId(pacientes, *numPacientes, id);
+    if (pos == -1) {
+        printf("Paciente nao encontrado.\n");
+        return;
+    }
+    Paciente p = pacientes[pos];
+    printf("\nPaciente excluido:\n");
+    printf("ID: %d\n", p.id);
+    printf("Nome: %s\n", p.nome);
+    printf("Identidade: %s\n", p.identidade);
+    printf("Endereco: %s\n", p.endereco);
+    printf("Telefone: %s\n", p.telefone);
+    printf("Sexo: %c\n", p.sexo);
+
+    for (int i = pos; i < (*numPacientes) - 1; i++) {
+        pacientes[i] = pacientes[i + 1];
+    }
+    (*numPacientes)--;
+    int i = 0;
+    while (i < *numConsultas) {
+        if (consultas[i].idPaciente == id) {
+            printf("Excluindo consulta com numero %d associada ao paciente.\n", consultas[i].numero);
+            for (int j = i; j < (*numConsultas) - 1; j++) {
+                consultas[j] = consultas[j + 1];
+            }
+            (*numConsultas)--;
+        } else {
+            i++;
+        }
+    }
+    printf("Paciente e consultas associadas excluidos com sucesso.\n");
+}
+
+void pesquisarPaciente(Paciente pacientes[], int numPacientes) {
+    int id;
+    printf("\n--- Pesquisa de Paciente ---\n");
+    printf("Digite o identificador do paciente: ");
+    scanf("%d", &id);
+    limparInputBuffer();
+    int pos = buscarPacientePorId(pacientes, numPacientes, id);
+    if (pos == -1) {
+        printf("Paciente nao encontrado.\n");
+        return;
+    }
+    Paciente p = pacientes[pos];
+    printf("\nPaciente encontrado:\n");
+    printf("ID: %d\n", p.id);
+    printf("Nome: %s\n", p.nome);
+    printf("Identidade: %s\n", p.identidade);
+    printf("Endereco: %s\n", p.endereco);
+    printf("Telefone: %s\n", p.telefone);
+    printf("Sexo: %c\n", p.sexo);
+}
+
+void incluirMedico(Medico medicos[], int *numMedicos) {
+    if (*numMedicos >= MAX_MEDICOS) {
+        printf("Limite de medicos atingido.\n");
+        return;
+    }
+    Medico m;
+    printf("\n--- Inclusao de Medico ---\n");
+    printf("Digite o identificador do medico: ");
+    scanf("%d", &m.id);
+    limparInputBuffer();
+    if (buscarMedicoPorId(medicos, *numMedicos, m.id) != -1) {
+        printf("Medico com este identificador ja existe.\n");
+        return;
+    }
+    lerString("Digite o nome do medico: ", m.nome, 50);
+    lerString("Digite a especialidade: ", m.especialidade, 50);
+
+    medicos[*numMedicos] = m;
+    (*numMedicos)++;
+    printf("Medico incluido com sucesso.\n");
+}
+
+void alterarMedico(Medico medicos[], int numMedicos) {
+    int id;
+    printf("\n--- Alteracao de Medico ---\n");
+    printf("Digite o identificador do medico a ser alterado: ");
+    scanf("%d", &id);
+    limparInputBuffer();
+    int pos = buscarMedicoPorId(medicos, numMedicos, id);
+    if (pos == -1) {
+        printf("Medico nao encontrado.\n");
+        return;
+    }
+    Medico *m = &medicos[pos];
+    printf("\nDados atuais do medico:\n");
+    printf("ID: %d\n", m->id);
+    printf("Nome: %s\n", m->nome);
+    printf("Especialidade: %s\n", m->especialidade);
+    lerString("Digite o novo nome: ", m->nome, 50);
+    lerString("Digite a nova especialidade: ", m->especialidade, 50);
+    printf("Medico alterado com sucesso.\n");
+}
+
+void excluirMedico(Medico medicos[], int *numMedicos, Consulta consultas[], int *numConsultas) {
+    int id;
+    printf("\n--- Exclusao de Medico ---\n");
+    printf("Digite o identificador do medico a ser excluido: ");
+    scanf("%d", &id);
+    limparInputBuffer();
+    int pos = buscarMedicoPorId(medicos, *numMedicos, id);
+    if (pos == -1) {
+        printf("Medico nao encontrado.\n");
+        return;
+    }
+    Medico m = medicos[pos];
+    printf("\nMedico excluido:\n");
+    printf("ID: %d\n", m.id);
+    printf("Nome: %s\n", m.nome);
+    printf("Especialidade: %s\n", m.especialidade);
+
+    for (int i = pos; i < (*numMedicos) - 1; i++) {
+        medicos[i] = medicos[i + 1];
+    }
+    (*numMedicos)--;
+
+    int i = 0;
+    while (i < *numConsultas) {
+        if (consultas[i].idMedico == id) {
+            printf("Excluindo consulta com numero %d associada ao medico.\n", consultas[i].numero);
+            for (int j = i; j < (*numConsultas) - 1; j++) {
+                consultas[j] = consultas[j + 1];
+            }
+            (*numConsultas)--;
+        } else {
+            i++;
+        }
+    }
+    printf("Medico e consultas associadas excluidos com sucesso.\n");
+}
+
+void pesquisarMedico(Medico medicos[], int numMedicos) {
+    int id;
+    printf("\n--- Pesquisa de Medico ---\n");
+    printf("Digite o identificador do medico: ");
+    scanf("%d", &id);
+    limparInputBuffer();
+    int pos = buscarMedicoPorId(medicos, numMedicos, id);
+    if (pos == -1) {
+        printf("Medico nao encontrado.\n");
+        return;
+    }
+    Medico m = medicos[pos];
+    printf("\nMedico encontrado:\n");
+    printf("ID: %d\n", m.id);
+    printf("Nome: %s\n", m.nome);
+    printf("Especialidade: %s\n", m.especialidade);
+}
+
+void listarPacientes(Paciente pacientes[], int numPacientes) {
+    if (numPacientes == 0) {
+        printf("Nenhum paciente cadastrado.\n");
+    } else {
+        printf("\nLista de Pacientes:\n");
+        for (int i = 0; i < numPacientes; i++) {
+            printf("ID: %d, Nome: %s, Identidade: %s, Endereco: %s, Telefone: %s, Sexo: %c\n",
+                   pacientes[i].id, pacientes[i].nome, pacientes[i].identidade,
+                   pacientes[i].endereco, pacientes[i].telefone, pacientes[i].sexo);
+        }
     }
 }
 
-
-void mostrarconsulta() {
-    for(int i=0; i< total_consultas; i++){
-        if (C[i].numero != 0) {
-        printf("\nConsulta n%d do paciente %s, com o medico %s, no dia %d, mes %d, ano %d, as %s com duracao de %d minutos\n\n",C[i].numero,
-                                                                                                                            C[i].paciente.nome_paciente,
-                                                                                                                            C[i].medico.nome_medico,
-                                                                                                                            C[i].data.dia,
-                                                                                                                            C[i].data.mes,
-                                                                                                                            C[i].data.ano,
-                                                                                                                            C[i].horario,
-                                                                                                                            C[i].duracao);
-        }                                                                                                                    
-    }   
-}
-
-//Funcao para gerenciar tanto medicos (1) tanto pacientes (2)
-void gerenciar(int tipo, int opcao) {
-    int i, registro, registro_in, escolha;
-    char nome[MAX];
-    getchar();
-
-    switch (opcao) {
-        case 1: // Cadastrar
-            if ((tipo == 1 && total_medicos >= MAX_MEDICO) ||
-                (tipo == 2 && total_pacientes >= MAX_PACIENTE)) {
-                printf("Limite atingido!\n");
-                return;
-            }
-
-            printf("\nDigite o nome: ");
-            fgets(nome, MAX, stdin);
-            nome[strcspn(nome, "\n")] = '\0'; 
-            printf("Digite o registro: ");
-            scanf("%d", &registro);
-            getchar();
-
-            for(int i=0; i<= MAX_PACIENTE; i++){
-                if((tipo == 1 && M[i].registro_m == registro) ||
-                (tipo == 2 && P[i].registro_p == registro)){
-                    printf("\nEsse registro ja existe!\n\n");
-                    return;
-                }
-            }
-
-            if (tipo == 1) { // Médico
-                M[total_medicos].registro_m = registro;
-                strcpy(M[total_medicos].nome_medico, nome);
-                printf("Digite a especialidade: ");
-                fgets(M[total_medicos].especialidade, MAX, stdin);
-                M[total_medicos].especialidade[strcspn(M[total_medicos].especialidade, "\n")] = '\0';
-                total_medicos++;
-
-            } else { // Paciente
-                P[total_pacientes].registro_p = registro;
-                strcpy(P[total_pacientes].nome_paciente, nome);
-                printf("Digite a identidade do paciente: ");
-                fgets(P[total_pacientes].identidade,MAX,stdin);
-                P[total_pacientes].identidade[strcspn(P[total_pacientes].identidade, "\n")] = '\0';
-                printf("Digite o Endereco completo: ");
-                fgets(P[total_pacientes].endereco, MAX, stdin);
-                P[total_pacientes].endereco[strcspn(P[total_pacientes].endereco, "\n")] = '\0';
-                printf("Digite o telefone: ");
-                fgets(P[total_pacientes].telefone, MAX, stdin);
-                P[total_pacientes].telefone[strcspn(P[total_pacientes].telefone, "\n")] = '\0';
-                printf("Digite o sexo: ");
-                fgets(P[total_pacientes].sexo, MAX, stdin);
-                P[total_pacientes].sexo[strcspn(P[total_pacientes].sexo, "\n")] = '\0';
-                total_pacientes++;
-            }
-            printf("\nCadastro realizado!\n");
-            break;
-
-        case 2: // Alterar
-            printf("\n\nDigite o id da pessoa para se alterar: ");
-            scanf("%d", &registro);
-
-            printf("\nO que deseja se alterar dessa pessoa?\n");
-            printf("1 - Nome\n");
-            printf("2 - identificador\n");
-            if(tipo ==2){
-                printf("3 - Identidade\n");
-                printf("4 - Endereco\n");
-                printf("5 - Telefone\n");
-                printf("6 - Sexo\n");
-            }
-            else printf("3 - Especialidade\n");
-            printf("escolha: ");
-
-            scanf("%d", &escolha);
-            getchar();
-
-            switch(escolha){
-                case 1: // trocando o nome
-                for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                    if ((tipo == 1 && M[i].registro_m == registro) ||
-                        (tipo == 2 && P[i].registro_p == registro )) {
-                        printf("\nDigite o novo nome:");
-                        fgets(nome, MAX, stdin);
-                        nome[strcspn(nome, "\n")] = '\0';
-    
-                        if (tipo == 1) strcpy(M[i].nome_medico, nome);
-                        else strcpy(P[i].nome_paciente, nome);
-                        printf("Alteracao feita!\n");
-                        return;
-                    }
-                } break;
-
-                case 2: // trocando o identificador
-                for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                    if ((tipo == 1 && M[i].registro_m == registro) ||
-                        (tipo == 2 && P[i].registro_p == registro )) {
-                        printf("Digite o novo id:");
-                        scanf("%d", &registro_in);
-                        getchar();
-    
-                        if (tipo == 1) M[i].registro_m = registro_in;
-                        else P[i].registro_p = registro_in;
-                        printf("Alteracao feita!\n");
-                        return;
-                    }
-                } break;
-
-                case 3: // trocando especialdade ou identidade
-                for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                    if ((tipo == 1 && M[i].registro_m == registro) ||
-                        (tipo == 2 && P[i].registro_p == registro )) {
-                        
-                        if (tipo == 1){
-                            printf("Digite a nova especialidade: ");
-                            fgets(M[i].especialidade, MAX, stdin);
-                            M[i].especialidade[strcspn(M[i].especialidade, "\n")] = '\0';
-                        }
-                        else{
-                            printf("Digite a nova identidade: ");
-                            fgets(P[i].identidade, MAX, stdin);
-                            P[i].identidade[strcspn(P[i].identidade, "\n")] = '\0';
-                        }
-                        printf("Alteracao feita!\n");
-                        return;
-                    }
-                } break;
-
-                case 4: 
-                for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                    if ((tipo == 1 && M[i].registro_m == registro) ||
-                        (tipo == 2 && P[i].registro_p == registro )) {
-                        if (tipo == 1) {
-                            printf("Nao temos essa opcao para medicos");
-                            return;
-                        }
-                        else {
-                            printf("Digite o novo endereco: ");
-                            fgets(P[i].endereco, MAX, stdin);
-                            P[i].endereco[strcspn(P[i].endereco, "\n")] = '\0';
-                        }
-                        printf("Alteracao feita!\n");
-                        return;
-                    }
-                } break;
-
-                case 5: 
-                for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                    if ((tipo == 1 && M[i].registro_m == registro) ||
-                        (tipo == 2 && P[i].registro_p == registro )) {
-                        if (tipo == 1) {
-                            printf("Nao temos essa opcao para medicos");
-                            return;
-                        }
-                        else {
-                            printf("Digite o novo telefone: ");
-                            fgets(P[i].telefone, MAX, stdin);
-                            P[i].telefone[strcspn(P[i].telefone, "\n")] = '\0';
-                        }
-                        printf("Alteracao feita!\n");
-                        return;
-                    }
-                } break;
-
-                case 6:
-                for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                    if ((tipo == 1 && M[i].registro_m == registro) ||
-                        (tipo == 2 && P[i].registro_p == registro )) {
-                        if (tipo == 1) {
-                            printf("Nao temos essa opcao para medicos");
-                            return;
-                        }
-                        else {
-                            printf("Digite o novo sexo: ");
-                            fgets(P[i].sexo, MAX, stdin);
-                            P[i].sexo[strcspn(P[i].sexo, "\n")] = '\0';
-                        }
-                        printf("Alteracao feita!\n");
-                        return;
-                    }
-                } break;
-                
-            }
-            printf("Registro nao encontrado!\n");
-            break;
-
-        case 3: // Excluir
-            printf("\n\nDigite o id da pessoa para se excluir: ");
-            scanf("%d", &registro);
-            getchar();
-
-            for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                if ((tipo == 1 && M[i].registro_m == registro) ||
-                    (tipo == 2 && P[i].registro_p == registro )) {
-                    printf("Excluindo...\n");
-
-                    if (tipo == 1) {
-                        M[i] = M[total_medicos - 1]; // Substituir pelo último
-                        total_medicos--;
-                    } else {
-                        P[i] = P[total_pacientes - 1]; // Substituir pelo último
-                        total_pacientes--;
-                    }
-                    printf("Excluído com sucesso!\n");
-                    return;
-                }
-            }
-            printf("Registro não encontrado!\n");
-            break;
-
-        case 4: // Listar
-            printf("\nLista de %s:\n", tipo == 1 ? "Medicos" : "Pacientes");
-            for (i = 0; i < (tipo == 1 ? total_medicos : total_pacientes); i++) {
-                if (tipo == 1)
-                    printf("ID: %d | Nome: %s | Especialidade: %s\n", M[i].registro_m, M[i].nome_medico, M[i].especialidade);
-                else
-                    printf("ID: %d | Nome: %s | Indentidade: %s | Endereco: %s | Telefone: %s | Sexo: %s \n", P[i].registro_p, P[i].nome_paciente, P[i].identidade, P[i].endereco, P[i].telefone, P[i].sexo);
-            }
-            break;
-
-        default:
-            printf("Opção inválida!\n");
+void listarMedicos(Medico medicos[], int numMedicos) {
+    if (numMedicos == 0) {
+        printf("Nenhum medico cadastrado.\n");
+    } else {
+        printf("\nLista de Medicos:\n");
+        for (int i = 0; i < numMedicos; i++) {
+            printf("ID: %d, Nome: %s, Especialidade: %s\n",
+                   medicos[i].id, medicos[i].nome, medicos[i].especialidade);
+        }
     }
 }
 
-void menuconsulta(){
-    int escolha;
-
-    printf("\n\nVoce deseja:\n");
-    printf("1 - Criar uma consulta\n");
-    printf("2 - Alterar uma consulta\n");
-    printf("3 - Excluir uma consulta\n");
-    printf("4 - Pesquisar sobre uma consulta\n");
-    printf("5 - Retornar ao menu\n");
-    printf("Escolha uma opcao: ");
-    scanf("%d", &escolha);
-
-    switch (escolha){
-        case 1:consulta() ;break;
-
-        case 2: alterarconsulta(); break;
-
-        case 3: excluirconsulta(); break;
-
-        case 4: mostrarconsulta(); break;
-
-        case 5:
-        printf("Voltando...\n");
-        break;
-
-        default:
-        printf("Esse nao eh um numero valido.\n");
-    }
-}
-
-void menupaciente(){
-    int escolha;
-
-    printf("\n\nVoce deseja:\n");
-    printf("1 - Cadastrar um paciente\n");
-    printf("2 - Alterar dados de um paciente\n");
-    printf("3 - Excluir um paciente\n");
-    printf("4 - Pesquisar sobre um paciente\n");
-    printf("5 - Retornar ao menu\n");
-    printf("Escolha uma opcao: ");
-    scanf("%d", &escolha);
-
-    switch (escolha){
-        case 1:gerenciar(2, 1); break;
-
-        case 2:gerenciar(2, 2); break;
-
-        case 3:gerenciar(2, 3); break;
-
-        case 4:gerenciar(2, 4); break;
-
-        case 5:
-        printf("Voltando...\n");
-        break;
-
-        default:
-        printf("Esse nao eh um numero valido.\n");
-    }
-}
-
-void menumedico(){
-    int escolha;
-
-    printf("\n\nVoce deseja:\n");
-        printf("1 - Cadastrar um medico\n");
-        printf("2 - Alterar dados de um medico\n");
-        printf("3 - Excluir um medico\n");
-        printf("4 - Pesquisar sobre um medico\n");
-        printf("5 - Retornar ao menu\n");
+void consultaMenu(Consulta consultas[], int *numConsultas, Paciente pacientes[], int numPacientes, Medico medicos[], int numMedicos) {
+    int opcao;
+    do {
+        printf("----- Menu de Consulta -----\n");
+        printf("1 - Inclusao\n");
+        printf("2 - Alteracao\n");
+        printf("3 - Exclusao\n");
+        printf("4 - Pesquisa\n");
+        printf("5 - Listar Consultas\n");
+        printf("6 - Voltar\n");
         printf("Escolha uma opcao: ");
-        scanf("%d", &escolha);
-
-        switch (escolha){
-            case 1:gerenciar(1, 1); break;
-
-            case 2:gerenciar(1, 2); break;
-    
-            case 3:gerenciar(1, 3); break;
-    
-            case 4:gerenciar(1, 4); break;
-
+        scanf("%d", &opcao);
+        limparInputBuffer();
+        switch(opcao) {
+            case 1:
+                incluirConsulta(consultas, numConsultas, pacientes, numPacientes, medicos, numMedicos);
+                break;
+            case 2:
+                alterarConsulta(consultas, *numConsultas, pacientes, numPacientes, medicos, numMedicos);
+                break;
+            case 3:
+                excluirConsulta(consultas, numConsultas);
+                break;
+            case 4:
+                pesquisarConsulta(consultas, *numConsultas, pacientes, numPacientes, medicos, numMedicos);
+                break;
             case 5:
-            printf("Voltando...\n");
-            break;
-
+                listarConsultas(consultas, *numConsultas);
+                break;
+            case 6:
+                break;
             default:
-            printf("Esse nao eh um numero valido.\n");
+                printf("Opcao invalida.\n");
         }
+    } while(opcao != 6);
 }
 
-void menurelatorio() {
-    int escolha;
-    char nome[MAX];
-    
-    printf("\n\nVoce deseja:\n");
-    printf("1 - Ver a lista de consultas agendadas para um paciente\n");
-    printf("2 - Ver a lista de consultas agendadas para um medico\n");
-    printf("3 - Ver a lista de pacientes para cada especialidade\n");
-    printf("4 - Retornar ao menu\n");
-    printf("Escolha uma opcao: ");
-    scanf("%d", &escolha);
-    getchar(); // Limpar buffer
-
-    switch (escolha) {
-        case 1: // Relatório de consultas por paciente
-            printf("\nDigite o nome do paciente: ");
-            fgets(nome, MAX, stdin);
-            nome[strcspn(nome, "\n")] = '\0';
-
-            printf("\nConsultas do paciente %s:\n", nome);
-            int encontrou = 0;
-            for (int i = 0; i < total_consultas; i++) {
-                if (strcmp(C[i].paciente.nome_paciente, nome) == 0) {
-                    printf("Consulta n%d com o medico %s, no dia %d/%d/%d, as %s, duracao: %d minutos\n",
-                           C[i].numero, C[i].medico.nome_medico, C[i].data.dia, C[i].data.mes, 
-                           C[i].data.ano, C[i].horario, C[i].duracao);
-                    encontrou = 1;
-                }
-            }
-            if (!encontrou) printf("Nenhuma consulta encontrada para esse paciente.\n");
-            break;
-
-        case 2: // Relatório de consultas por médico
-            printf("\nDigite o nome do medico: ");
-            fgets(nome, MAX, stdin);
-            nome[strcspn(nome, "\n")] = '\0';
-
-            printf("\nConsultas do medico %s:\n", nome);
-            encontrou = 0;
-            for (int i = 0; i < total_consultas; i++) {
-                if (strcmp(C[i].medico.nome_medico, nome) == 0) {
-                    printf("Consulta n%d do paciente %s, no dia %d/%d/%d, as %s, duracao: %d minutos\n",
-                           C[i].numero, C[i].paciente.nome_paciente, C[i].data.dia, C[i].data.mes, 
-                           C[i].data.ano, C[i].horario, C[i].duracao);
-                    encontrou = 1;
-                }
-            }
-            if (!encontrou) printf("Nenhuma consulta encontrada para esse medico.\n");
-            break;
-
-        case 3: // Relatório de pacientes por especialidade médica
-            printf("\nDigite a especialidade: ");
-            fgets(nome, MAX, stdin);
-            nome[strcspn(nome, "\n")] = '\0';
-
-            printf("\nPacientes atendidos por medicos da especialidade %s:\n", nome);
-            encontrou = 0;
-            for (int i = 0; i < total_consultas; i++) {
-                if (strcmp(C[i].medico.especialidade, nome) == 0) {
-                    printf("- %s\n", C[i].paciente.nome_paciente);
-                    encontrou = 1;
-                }
-            }
-            if (!encontrou) printf("Nenhum paciente encontrado para essa especialidade.\n");
-            break;
-
-        case 4:
-            printf("Voltando...\n");
-            break;
-        
-        default:
-            printf("Escolha um numero valido\n");
-            break;
-    }
+void pacienteMenu(Paciente pacientes[], int *numPacientes, Consulta consultas[], int *numConsultas) {
+    int opcao;
+    do {
+        printf("----- Menu de Paciente -----\n");
+        printf("1 - Inclusao\n");
+        printf("2 - Alteracao\n");
+        printf("3 - Exclusao\n");
+        printf("4 - Pesquisa\n");
+        printf("5 - Listar Todos\n");
+        printf("6 - Voltar\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+        limparInputBuffer();
+        switch(opcao) {
+            case 1:
+                incluirPaciente(pacientes, numPacientes);
+                break;
+            case 2:
+                alterarPaciente(pacientes, *numPacientes);
+                break;
+            case 3:
+                excluirPaciente(pacientes, numPacientes, consultas, numConsultas);
+                break;
+            case 4:
+                pesquisarPaciente(pacientes, *numPacientes);
+                break;
+            case 5:
+                listarPacientes(pacientes, *numPacientes);
+                break;
+            case 6:
+                break;
+            default:
+                printf("Opcao invalida.\n");
+        }
+    } while(opcao != 6);
 }
 
-
-int main(){
-    while(1){
-    int n;
-    printf("----MENU----\n");
-    printf("1 - Consulta\n");
-    printf("2 - Paciente\n");
-    printf("3 - Medico\n");
-    printf("4 - Relatorios\n");
-    printf("5 - Sair\n");
-    printf("Escolha uma opcao: ");
-    scanf("%d", &n);
-
-    
-
-    switch (n){
-        case 1: menuconsulta(); break;
-
-        case 2: menupaciente(); break;
-
-        case 3: menumedico(); break;
-        
-        case 4: menurelatorio(); break;
-        
-        case 5:
-        printf("Saindo...\n");
-        return 0;
-
-        default:
-        printf("Esse nao eh um numero valido.\n");
-    }
-    printf("\n");
-    }
+void medicoMenu(Medico medicos[], int *numMedicos, Consulta consultas[], int *numConsultas) {
+    int opcao;
+    do {
+        printf("----- Menu de Medico -----\n");
+        printf("1 - Inclusao\n");
+        printf("2 - Alteracao\n");
+        printf("3 - Exclusao\n");
+        printf("4 - Pesquisa\n");
+        printf("5 - Listar Todos\n");
+        printf("6 - Voltar\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+        limparInputBuffer();
+        switch(opcao) {
+            case 1:
+                incluirMedico(medicos, numMedicos);
+                break;
+            case 2:
+                alterarMedico(medicos, *numMedicos);
+                break;
+            case 3:
+                excluirMedico(medicos, numMedicos, consultas, numConsultas);
+                break;
+            case 4:
+                pesquisarMedico(medicos, *numMedicos);
+                break;
+            case 5:
+                listarMedicos(medicos, *numMedicos);
+                break;
+            case 6:
+                break;
+            default:
+                printf("Opcao invalida.\n");
+        }
+    } while(opcao != 6);
+}
+void relatoriosMenu(Consulta consultas[], int numConsultas, Paciente pacientes[], int numPacientes, Medico medicos[], int numMedicos) {
+    int opcao;
+    do {
+        printf("----- Menu de Relatorios -----\n");
+        printf("1 - Lista de consultas agendadas para um paciente\n");
+        printf("2 - Lista de consultas agendadas para um medico\n");
+        printf("3 - Lista de pacientes por especialidade\n");
+        printf("4 - Voltar\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+        limparInputBuffer();
+        switch(opcao) {
+            case 1: {
+                int idPaciente;
+                printf("\nDigite o identificador do paciente: ");
+                scanf("%d", &idPaciente);
+                limparInputBuffer();
+                int achou = 0;
+                printf("\nConsultas do paciente %d:\n", idPaciente);
+                for (int i = 0; i < numConsultas; i++) {
+                    if (consultas[i].idPaciente == idPaciente) {
+                        printf("Numero: %d, Medico: %d, Horario: %s, Duracao: %d, Data: %s\n", 
+                               consultas[i].numero, consultas[i].idMedico, consultas[i].horario, consultas[i].duracao, consultas[i].data);
+                        achou = 1;
+                    }
+                }
+                if (!achou)
+                    printf("Nenhuma consulta encontrada para este paciente.\n");
+                break;
+            }
+            case 2: {
+                int idMedico;
+                printf("\nDigite o identificador do medico: ");
+                scanf("%d", &idMedico);
+                limparInputBuffer();
+                int achou = 0;
+                printf("\nConsultas do medico %d:\n", idMedico);
+                for (int i = 0; i < numConsultas; i++) {
+                    if (consultas[i].idMedico == idMedico) {
+                        printf("Numero: %d, Paciente: %d, Horario: %s, Duracao: %d, Data: %s\n", 
+                               consultas[i].numero, consultas[i].idPaciente, consultas[i].horario, consultas[i].duracao, consultas[i].data);
+                        achou = 1;
+                    }
+                }
+                if (!achou)
+                    printf("Nenhuma consulta encontrada para este medico.\n");
+                break;
+            }
+            case 3: {
+                char especialidade[50];
+                lerString("\nDigite a especialidade: ", especialidade, 50);
+                int printed[50] = {0};
+                int achou = 0;
+                for (int i = 0; i < numConsultas; i++) {
+                    int posMedico = buscarMedicoPorId(medicos, numMedicos, consultas[i].idMedico);
+                    if (posMedico != -1 && strcmp(medicos[posMedico].especialidade, especialidade) == 0) {
+                        int posPaciente = buscarPacientePorId(pacientes, numPacientes, consultas[i].idPaciente);
+                        if (posPaciente != -1 && printed[posPaciente] == 0) {
+                            printf("Paciente ID: %d, Nome: %s\n", pacientes[posPaciente].id, pacientes[posPaciente].nome);
+                            printed[posPaciente] = 1;
+                            achou = 1;
+                        }
+                    }
+                }
+                if (!achou)
+                    printf("Nenhum paciente encontrado para esta especialidade.\n");
+                break;
+            }
+            case 4:
+                break;
+            default:
+                printf("Opcao invalida.\n");
+        }
+    } while(opcao != 4);
+}
+int main() {
+    Medico medicos[MAX_MEDICOS];
+    Paciente pacientes[MAX_PACIENTES];
+    Consulta consultas[MAX_CONSULTAS];
+    int numMedicos = 0, numPacientes = 0, numConsultas = 0;
+    int opcao;
+    do {
+        printf("----- Menu Principal -----\n");
+        printf("1 - Consulta\n");
+        printf("2 - Paciente\n");
+        printf("3 - Medico\n");
+        printf("4 - Relatorios\n");
+        printf("5 - Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+        limparInputBuffer();
+        switch(opcao) {
+            case 1:
+                consultaMenu(consultas, &numConsultas, pacientes, numPacientes, medicos, numMedicos);
+                break;
+            case 2:
+                pacienteMenu(pacientes, &numPacientes, consultas, &numConsultas);
+                break;
+            case 3:
+                medicoMenu(medicos, &numMedicos, consultas, &numConsultas);
+                break;
+            case 4:
+                relatoriosMenu(consultas, numConsultas, pacientes, numPacientes, medicos, numMedicos);
+                break;
+            case 5:
+                printf("Saindo...\n");
+                break;
+            default:
+                printf("Opcao invalida.\n");
+        }
+    } while(opcao != 5);
     return 0;
 }
